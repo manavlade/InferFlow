@@ -3,8 +3,11 @@ import time
 
 from google import genai
 from dotenv import load_dotenv
+import asyncio
 
 import httpx
+
+from app.services.log_service import ingest_log
 
 load_dotenv()
 
@@ -14,13 +17,7 @@ client = genai.Client(
 
 
 async def send_log_to_ingestion(log_data: dict):
-
-    async with httpx.AsyncClient() as client:
-
-        await client.post(
-            "http://127.0.0.1:8000/logs/ingest",
-            json=log_data
-        )
+    await ingest_log(log_data)
 
 
 async def call_llm_with_logging(
@@ -32,20 +29,19 @@ async def call_llm_with_logging(
 
     try:
 
-        # Convert messages into prompt
         formatted_prompt = ""
 
         for msg in messages:
             formatted_prompt += f"{msg['role']}: {msg['content']}\n"
 
-        # Token counting
-        input_token_info = client.models.count_tokens(
+        input_token_info = await asyncio.to_thread(
+            client.models.count_tokens,
             model="gemini-2.5-flash",
             contents=formatted_prompt
         )
 
-        # Gemini response
-        response = client.models.generate_content(
+        response = await asyncio.to_thread(
+            client.models.generate_content,
             model="gemini-2.5-flash",
             contents=formatted_prompt
         )
@@ -107,23 +103,15 @@ async def call_llm_with_logging(
         latency = time.time() - start_time
 
         log_data = {
-
             "conversation_id": conversation_id,
-
             "provider": "gemini",
-
             "model": "gemini-2.5-flash",
-
             "latency": latency,
-
             "status": "error",
-
             "error_message": str(e),
-
             "input_preview": messages[-1]["content"][:100]
         }
 
-        # Send error logs too
         await send_log_to_ingestion(log_data)
 
-        raise e
+        raise  # ✅ bare raise, preserves traceback
