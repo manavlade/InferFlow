@@ -10,10 +10,7 @@ export default function Navbar() {
 
     const navLinks = [
         { name: "Home", path: "/" },
-        { name: "About", path: "/about" },
-        { name: "Create Note", path: "/create-note" },
-        { name: "Footer", path: "#footer" },
-        {name: "Contribution", path: "/Contribution"}
+        { name: "Dashboard", path: '/dashboard' },
     ];
 
     return (
@@ -23,11 +20,10 @@ export default function Navbar() {
 
                 <div className="flex items-center justify-between h-16">
 
-                    {/* LOGO */}
                     <Link to="/" className="flex items-center gap-2">
                         <NotebookPen className="h-7 w-7 text-blue-600" />
                         <span className="text-xl font-bold text-gray-900">
-                            NotesApp
+                            InferFlow
                         </span>
                     </Link>
 
@@ -46,24 +42,8 @@ export default function Navbar() {
                             ))}
                         </div>
 
-                        {/* STATIC AUTH BUTTONS (TEMPORARY) */}
-                        <div className="flex items-center gap-3">
-                            <Link to="/login">
-                                <Button variant="outline">
-                                    Login
-                                </Button>
-                            </Link>
-
-                            <Link to="/signup">
-                                <Button>
-                                    Sign Up
-                                </Button>
-                            </Link>
-                        </div>
-
                     </div>
 
-                    {/* MOBILE MENU BUTTON */}
                     <button
                         className="md:hidden"
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

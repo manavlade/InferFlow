@@ -1,57 +1,52 @@
 import os
 import time
 import asyncio
-
-from google import genai
+from groq import Groq
 from dotenv import load_dotenv
 from app.services.log_service import ingest_log
 
 load_dotenv()
 
-client = genai.Client(
-    api_key=os.getenv("GEMINI_API_KEY")
-)
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+MODEL = "llama-3.3-70b-versatile"
 
 
-async def send_log_to_ingestion(log_data: dict):
+async def send_log(log_data: dict):
     await ingest_log(log_data)
 
 
-def _format_prompt(messages: list) -> str:
-    return "".join(
-        f"{msg['role']}: {msg['content']}\n"
-        for msg in messages
-    )
-
-
 # ─── Non-streaming ────────────────────────────────────────────
-async def call_llm_with_logging(
+async def call_groq_with_logging(
     conversation_id: str,
     messages: list
 ):
     start_time = time.time()
 
     try:
-        formatted_prompt = _format_prompt(messages)
+        formatted_messages = [
+            {"role": msg["role"], "content": msg["content"]}
+            for msg in messages
+        ]
 
         response = await asyncio.to_thread(
-            client.models.generate_content,
-            model="gemini-2.5-flash",
-            contents=formatted_prompt
+            client.chat.completions.create,
+            model=MODEL,
+            messages=formatted_messages
         )
 
         latency = time.time() - start_time
-        ai_response = response.text
-        usage = response.usage_metadata
+        ai_response = response.choices[0].message.content
+        usage = response.usage
 
-        await send_log_to_ingestion({
+        await send_log({
             "conversation_id": conversation_id,
-            "provider": "gemini",
-            "model": "gemini-2.5-flash",
+            "provider": "groq",
+            "model": MODEL,
             "latency": latency,
-            "prompt_tokens": getattr(usage, "prompt_token_count", None),
-            "completion_tokens": getattr(usage, "candidates_token_count", None),
-            "total_tokens": getattr(usage, "total_token_count", None),
+            "prompt_tokens": usage.prompt_tokens,
+            "completion_tokens": usage.completion_tokens,
+            "total_tokens": usage.total_tokens,
             "status": "success",
             "input_preview": messages[-1]["content"][:100],
             "output_preview": ai_response[:100]
@@ -62,10 +57,10 @@ async def call_llm_with_logging(
     except Exception as e:
         latency = time.time() - start_time
 
-        await send_log_to_ingestion({
+        await send_log({
             "conversation_id": conversation_id,
-            "provider": "gemini",
-            "model": "gemini-2.5-flash",
+            "provider": "groq",
+            "model": MODEL,
             "latency": latency,
             "status": "error",
             "error_message": str(e),
@@ -76,7 +71,7 @@ async def call_llm_with_logging(
 
 
 # ─── Streaming ────────────────────────────────────────────────
-async def stream_llm_with_logging(
+async def stream_groq_with_logging(
     conversation_id: str,
     messages: list
 ):
@@ -84,26 +79,30 @@ async def stream_llm_with_logging(
     full_response = ""
 
     try:
-        formatted_prompt = _format_prompt(messages)
+        formatted_messages = [
+            {"role": msg["role"], "content": msg["content"]}
+            for msg in messages
+        ]
 
         stream = await asyncio.to_thread(
-            client.models.generate_content_stream,
-            model="gemini-2.5-flash",
-            contents=formatted_prompt
+            client.chat.completions.create,
+            model=MODEL,
+            messages=formatted_messages,
+            stream=True
         )
 
         for chunk in stream:
-            text = getattr(chunk, "text", "") or ""
+            text = chunk.choices[0].delta.content or ""
             if text:
                 full_response += text
                 yield f"data: {text}\n\n"
 
         latency = time.time() - start_time
 
-        await send_log_to_ingestion({
+        await send_log({
             "conversation_id": conversation_id,
-            "provider": "gemini",
-            "model": "gemini-2.5-flash",
+            "provider": "groq",
+            "model": MODEL,
             "latency": latency,
             "status": "success",
             "input_preview": messages[-1]["content"][:100],
@@ -118,10 +117,10 @@ async def stream_llm_with_logging(
     except Exception as e:
         latency = time.time() - start_time
 
-        await send_log_to_ingestion({
+        await send_log({
             "conversation_id": conversation_id,
-            "provider": "gemini",
-            "model": "gemini-2.5-flash",
+            "provider": "groq",
+            "model": MODEL,
             "latency": latency,
             "status": "error",
             "error_message": str(e),
