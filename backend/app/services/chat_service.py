@@ -5,13 +5,14 @@ from datetime import datetime, timezone
 
 from app.db.database import db
 from app.services.gemini_service import call_llm_with_logging
+from app.utils.pii_redactor import redact_pii
 
 
 async def handle_chat(message: str, conversation_id: str | None):
 
     user_message = {
         "role": "user",
-        "content": message
+        "content": redact_pii(message)
     }
 
     if conversation_id:

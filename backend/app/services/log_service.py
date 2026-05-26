@@ -1,12 +1,21 @@
 from datetime import datetime, timezone
-from fastapi import HTTPException
-
 from app.db.database import db
+from app.utils.pii_redactor import redact_pii
 
 
 async def ingest_log(log_data: dict):
 
     log_data["created_at"] = datetime.now(timezone.utc)
+
+    # Redact PII from previews before storing
+    if log_data.get("input_preview"):
+        log_data["input_preview"] = redact_pii(log_data["input_preview"])
+
+    if log_data.get("output_preview"):
+        log_data["output_preview"] = redact_pii(log_data["output_preview"])
+
+    if log_data.get("error_message"):
+        log_data["error_message"] = redact_pii(log_data["error_message"])
 
     await db.inference_logs.insert_one(log_data)
 
