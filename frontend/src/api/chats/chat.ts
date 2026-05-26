@@ -1,8 +1,6 @@
 const BASE_URL =
     import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 export interface Message {
     role: "user" | "assistant";
     content: string;
@@ -80,22 +78,59 @@ const request = async <T>(
     return data;
 };
 
-// ─── Chat ─────────────────────────────────────────────────────────────────────
-
-export const sendMessage = async (
+// Update sendMessageStream signature
+export const sendMessageStream = async (
     message: string,
-    conversation_id?: string
-): Promise<ChatResponse> => {
-    return request<ChatResponse>("/chat", {
+    conversation_id: string | undefined,
+    provider: "gemini" | "groq",
+    onChunk: (text: string) => void,
+    onConversationId: (id: string) => void,
+    onDone: (conversationId: string) => void,
+    onError: (error: string) => void,
+    signal?: AbortSignal
+): Promise<void> => {
+
+    const response = await fetch(`${BASE_URL}/chat/stream`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             message,
             conversation_id: conversation_id || null,
+            provider
         }),
-    });
-};
+        signal
+    })
 
-// ─── Conversations ────────────────────────────────────────────────────────────
+    if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data?.detail || "Stream request failed")
+    }
+
+    const reader = response.body!.getReader()
+    const decoder = new TextDecoder()
+
+    while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const raw = decoder.decode(value, { stream: true })
+        const lines = raw.split("\n\n").filter(Boolean)
+
+        for (const line of lines) {
+            const text = line.replace(/^data: /, "")
+
+            if (text.startsWith("[ID]")) {
+                onConversationId(text.replace("[ID]", ""))
+            } else if (text.startsWith("[DONE]")) {
+                onDone(text.replace("[DONE]", ""))
+            } else if (text.startsWith("[ERROR]")) {
+                onError(text.replace("[ERROR]", ""))
+            } else {
+                onChunk(text)
+            }
+        }
+    }
+}
 
 export const fetchConversations = async (): Promise<Conversation[]> => {
     return request<Conversation[]>("/conversations");
