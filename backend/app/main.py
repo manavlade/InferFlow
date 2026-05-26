@@ -4,11 +4,28 @@ from app.routes.chat_routes import router
 from app.routes.log_routes import router as log_router
 from app.routes.conversation_routes import router as conversation_routes
 import os
+from fastapi.middleware.cors import CORSMiddleware
+
 
 if not os.getenv("GEMINI_API_KEY"):
     raise RuntimeError("GEMINI_API_KEY is not set. Check your .env file.")
 
 app = FastAPI()
+
+app.add_middleware(
+       CORSMiddleware,
+
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+
+    allow_credentials=True,
+
+    allow_methods=["*"],
+
+    allow_headers=["*"],
+)
 
 app.include_router(router)
 app.include_router(log_router)
