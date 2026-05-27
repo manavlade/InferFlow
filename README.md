@@ -229,56 +229,17 @@ Latency, token usage, error rates
 
 ---
 
-## Failure Handling
+## Tech Stack
 
-| Scenario | Behavior |
+| Layer | Technology |
 |---|---|
-| LLM API call fails | Error caught, logged with `status: error`, exception re-raised to client |
-| MongoDB insert fails | Exception propagates, 500 returned to client |
-| Log ingestion fails | Currently silent — response already sent to user |
-| Invalid conversation ID | 400 Bad Request with clear message |
-| Conversation not found | 404 Not Found |
-| Missing env variables | Server fails fast at startup with `RuntimeError` |
-| User cancels stream | `AbortController` cancels fetch, partial response discarded |
+| Frontend | React + TypeScript + Vite + Tailwind CSS |
+| Backend | FastAPI (Python) |
+| Database | MongoDB Atlas |
+| LLM Providers | Google Gemini 2.5 Flash, Groq Llama 3.3 70B |
+| Containerization | Docker + Docker Compose |
+| Deployment | Vercel (Frontend) + Railway (Backend) |
 
 ---
 
-## Tradeoffs Made
-
-**1. PII redacted before DB storage, not before LLM call**
-The LLM receives the original message for better response quality. Only storage is redacted. Full compliance would require pre-LLM redaction but risks degrading conversational quality.
-
-**2. Direct service call for logging instead of event queue**
-Simpler architecture, no Redis dependency. Tradeoff is that if the app scales to high throughput, a queue (Redis Streams, Kafka) would decouple logging from the request path and improve reliability.
-
-**3. Messages embedded in conversation document**
-Fast reads for chat history but document size grows with conversation length. For very long conversations, a separate messages collection with references would be more appropriate.
-
-**4. Token counts unavailable during streaming**
-Gemini and Groq don't return token counts mid-stream. Logged as `null` for streaming requests. Non-streaming path captures full token metadata.
-
-**5. MongoDB over PostgreSQL**
-Chosen for flexible message schema and fast prototyping. A relational DB would offer stronger consistency guarantees and better analytics queries at scale.
-
----
-
-## What I Would Improve
-
-- **Event-based architecture** — introduce Redis Streams or Kafka to decouple log ingestion from the request path, improving reliability at scale
-- **Token counts for streaming** — use a tokenizer library (tiktoken) to estimate tokens client-side during streaming
-- **Full PII redaction pipeline** — redact before LLM call using a dedicated PII detection service (e.g. Microsoft Presidio)
-- **Rate limiting** — add per-user or per-IP rate limiting on chat endpoints
-- **Authentication** — add JWT-based auth so conversations are user-scoped
-- **Pagination** — replace hardcoded `length=100` with cursor-based pagination
-- **Retry logic** — exponential backoff on LLM API failures
-- **Self-hosted k8s deployment** — Kubernetes manifests for production-grade orchestration
-- **More providers** — OpenAI, Anthropic, Cohere as additional provider options
-- **Automated tests** — unit tests for PII redactor, integration tests for ingestion pipeline
-
----
-
-## Author
-
-**Manav Shailendra Lade**
-📧 [manavlade14690@gmail.com](mailto:manavlade14690@gmail.com)
-🐙 [github.com/manavlade/InferFlow](https://github.com/manavlade/InferFlow)
+## Architecture Overview
