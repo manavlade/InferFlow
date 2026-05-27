@@ -17,10 +17,7 @@ interface DashboardProps {
   logs: InferenceLog[];
 }
 
-const Dashboard = ({
-  logs,
-}: DashboardProps) => {
-
+const Dashboard = ({ logs }: DashboardProps) => {
 
   const totalRequests = logs.length;
 
@@ -33,10 +30,8 @@ const Dashboard = ({
   ).length;
 
   const avgLatency =
-    logs.reduce(
-      (acc, log) => acc + log.latency,
-      0
-    ) / (logs.length || 1);
+    logs.reduce((acc, log) => acc + log.latency, 0) /
+    (logs.length || 1);
 
   const totalTokens = logs.reduce(
     (acc, log) => acc + (log.total_tokens || 0),
@@ -47,484 +42,255 @@ const Dashboard = ({
     (successRequests / (totalRequests || 1)) * 100
   ).toFixed(1);
 
+  // ─── Multi-provider stats ──────────────────────────────────
+  const geminiLogs = logs.filter((log) => log.provider === "gemini")
+  const groqLogs = logs.filter((log) => log.provider === "groq")
+
+  const geminiAvgLatency =
+    geminiLogs.reduce((acc, log) => acc + log.latency, 0) /
+    (geminiLogs.length || 1)
+
+  const groqAvgLatency =
+    groqLogs.reduce((acc, log) => acc + log.latency, 0) /
+    (groqLogs.length || 1)
+
+  // unique providers used
+  const providers = [...new Set(logs.map((log) => log.provider))]
+
   return (
+    <div className="min-h-screen bg-gradient-to-br from-white via-zinc-50 to-zinc-100 text-zinc-900 p-6">
 
-    <div
-      className="
-        min-h-screen
-        bg-gradient-to-b
-        from-white
-        via-zinc-50
-        to-zinc-100
-        text-zinc-900
-        p-6
-      "
-    >
-
+      {/* Header */}
       <div className="mb-10">
-
         <div className="flex items-center gap-4 mb-4">
-
-          <div
-            className="
-              w-14 h-14
-              rounded-2xl
-              bg-gradient-to-br
-              from-blue-600
-              to-blue-500
-              flex items-center justify-center
-              shadow-xl shadow-blue-500/20
-            "
-          >
-
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-500 flex items-center justify-center shadow-xl shadow-blue-500/20">
             <Sparkles className="text-white" />
-
           </div>
-
           <div>
-
-            <h1
-              className="
-                text-4xl
-                font-bold
-                tracking-tight
-                text-zinc-900
-              "
-            >
+            <h1 className="text-4xl font-bold tracking-tight text-zinc-900">
               InferFlow Dashboard
             </h1>
-
             <p className="text-zinc-500 mt-1">
-              Monitor inference requests,
-              latency, token usage and
-              AI performance metrics.
+              Monitor inference requests, latency, token usage and AI performance metrics.
             </p>
-
           </div>
-
         </div>
-
       </div>
 
-      <div
-        className="
-          grid grid-cols-1
-          sm:grid-cols-2
-          xl:grid-cols-4
-          gap-6
-          mb-10
-        "
-      >
-
+      {/* Top Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
         <MetricCard
           title="Total Requests"
           value={totalRequests}
           icon={<Activity size={20} />}
         />
-
         <MetricCard
           title="Average Latency"
           value={`${avgLatency.toFixed(2)}s`}
           icon={<Clock3 size={20} />}
         />
-
         <MetricCard
           title="Total Tokens"
           value={totalTokens}
           icon={<Bot size={20} />}
         />
-
         <MetricCard
           title="Error Requests"
           value={failedRequests}
           icon={<AlertTriangle size={20} />}
         />
-
       </div>
 
-      <div
-        className="
-          grid grid-cols-1
-          xl:grid-cols-3
-          gap-6
-          mb-10
-        "
-      >
-
-        {/* Success Rate */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-10">
         <AnalyticsCard
           title="Success Rate"
-          icon={
-            <TrendingUp
-              className="text-green-600"
-            />
-          }
+          icon={<TrendingUp className="text-green-600" />}
         >
-
           <div className="space-y-5">
-
             <div>
-
-              <p className="text-zinc-500 text-sm">
-                Request Health
-              </p>
-
-              <h2
-                className="
-                  text-5xl
-                  font-bold
-                  text-zinc-900
-                  mt-1
-                "
-              >
+              <p className="text-zinc-500 text-sm">Request Health</p>
+              <h2 className="text-5xl font-bold text-zinc-900 mt-1">
                 {successRate}%
               </h2>
-
             </div>
-
             <div className="space-y-3">
-
-              <StatusRow
-                color="bg-green-500"
-                label="Successful"
-                value={successRequests}
-              />
-
-              <StatusRow
-                color="bg-red-500"
-                label="Failed"
-                value={failedRequests}
-              />
-
+              <StatusRow color="bg-green-500" label="Successful" value={successRequests} />
+              <StatusRow color="bg-red-500" label="Failed" value={failedRequests} />
             </div>
-
           </div>
-
         </AnalyticsCard>
 
-        {/* Provider */}
+        {/* Provider Info — now dynamic */}
         <AnalyticsCard
           title="Provider Info"
-          icon={
-            <Database className="text-blue-600" />
-          }
+          icon={<Database className="text-blue-600" />}
         >
-
           <div className="space-y-5">
 
             <InfoRow
-              label="Provider"
-              value="Gemini"
+              label="Active Providers"
+              value={providers.length}
             />
 
-            <InfoRow
-              label="Model"
-              value="gemini-2.5-flash"
-            />
+            {/* Gemini stats */}
+            <div className="border-t border-zinc-100 pt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-2 h-2 rounded-full bg-blue-500" />
+                <span className="text-sm font-semibold text-zinc-700">Gemini</span>
+              </div>
+              <div className="space-y-2 pl-4">
+                <InfoRow label="Requests" value={geminiLogs.length} />
+                <InfoRow
+                  label="Avg Latency"
+                  value={geminiLogs.length ? `${geminiAvgLatency.toFixed(2)}s` : "—"}
+                />
+              </div>
+            </div>
 
-            <InfoRow
-              label="Logs Stored"
-              value={logs.length}
-            />
-
-            <InfoRow
-              label="Status"
-              value="Operational"
-              valueClass="text-green-600"
-            />
+            {/* Groq stats */}
+            <div className="border-t border-zinc-100 pt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-2 h-2 rounded-full bg-orange-500" />
+                <span className="text-sm font-semibold text-zinc-700">Groq</span>
+              </div>
+              <div className="space-y-2 pl-4">
+                <InfoRow label="Requests" value={groqLogs.length} />
+                <InfoRow
+                  label="Avg Latency"
+                  value={groqLogs.length ? `${groqAvgLatency.toFixed(2)}s` : "—"}
+                />
+              </div>
+            </div>
 
           </div>
-
         </AnalyticsCard>
 
         {/* Performance */}
         <AnalyticsCard
           title="Performance"
-          icon={
-            <Cpu className="text-violet-600" />
-          }
+          icon={<Cpu className="text-violet-600" />}
         >
-
           <div className="space-y-5">
-
+            <InfoRow label="Avg Latency (All)" value={`${avgLatency.toFixed(2)}s`} />
             <InfoRow
-              label="Average Latency"
-              value={`${avgLatency.toFixed(2)}s`}
+              label="Fastest Provider"
+              value={
+                groqLogs.length && geminiLogs.length
+                  ? groqAvgLatency < geminiAvgLatency ? "Groq" : "Gemini"
+                  : providers[0] ?? "—"
+              }
+              valueClass="text-green-600"
             />
-
-            <InfoRow
-              label="Token Usage"
-              value={totalTokens}
-            />
-
-            <InfoRow
-              label="Requests"
-              value={totalRequests}
-            />
-
-            <InfoRow
-              label="Streaming"
-              value="Enabled"
-              valueClass="text-blue-600"
-            />
-
+            <InfoRow label="Token Usage" value={totalTokens} />
+            <InfoRow label="Requests" value={totalRequests} />
+            <InfoRow label="Streaming" value="Enabled" valueClass="text-blue-600" />
           </div>
-
         </AnalyticsCard>
 
       </div>
 
-      <div
-        className="
-          bg-white/80
-          backdrop-blur-xl
-          border border-zinc-200
-          rounded-3xl
-          shadow-sm
-          overflow-hidden
-        "
-      >
+      {/* Recent Logs Table */}
+      <div className="bg-white/80 backdrop-blur-xl border border-zinc-200 rounded-3xl shadow-sm overflow-hidden">
 
-        <div
-          className="
-            flex
-            items-center
-            justify-between
-            px-6 py-5
-            border-b
-            border-zinc-200
-          "
-        >
-
+        <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-200">
           <div className="flex items-center gap-3">
-
-            <div
-              className="
-                w-10 h-10
-                rounded-xl
-                bg-blue-50
-                flex items-center justify-center
-              "
-            >
-
-              <Activity
-                size={18}
-                className="text-blue-600"
-              />
-
+            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+              <Activity size={18} className="text-blue-600" />
             </div>
-
             <div>
-
-              <h2
-                className="
-                  text-xl
-                  font-bold
-                  text-zinc-900
-                "
-              >
+              <h2 className="text-xl font-bold text-zinc-900">
                 Recent Inference Logs
               </h2>
-
-              <p className="text-sm text-zinc-500">
-                Real-time request monitoring
-              </p>
-
+              <p className="text-sm text-zinc-500">Real-time request monitoring</p>
             </div>
-
           </div>
-
         </div>
 
-        {/* Table */}
         <div className="overflow-x-auto">
-
           <table className="w-full">
-
-            <thead
-              className="
-                bg-zinc-50
-                border-b
-                border-zinc-200
-              "
-            >
-
+            <thead className="bg-zinc-50 border-b border-zinc-200">
               <tr>
-
                 <TableHead>Status</TableHead>
-
+                <TableHead>Provider</TableHead>
                 <TableHead>Model</TableHead>
-
                 <TableHead>Latency</TableHead>
-
                 <TableHead>Tokens</TableHead>
-
                 <TableHead>Prompt</TableHead>
-
               </tr>
-
             </thead>
 
             <tbody>
+              {logs.slice().reverse().map((log) => (
+                <tr
+                  key={log.id}
+                  className="border-b border-zinc-100 hover:bg-zinc-50/80 transition-all"
+                >
 
-              {logs
-                .slice()
-                .reverse()
-                .map((log) => (
+                  {/* Status */}
+                  <td className="px-6 py-5">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border">
+                      {log.status === "success" ? (
+                        <>
+                          <CheckCircle2 size={16} className="text-green-600" />
+                          <span className="text-green-700">Success</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle size={16} className="text-red-600" />
+                          <span className="text-red-700">Failed</span>
+                        </>
+                      )}
+                    </div>
+                  </td>
 
-                  <tr
-                    key={log.id}
-                    className="
-                      border-b
-                      border-zinc-100
-                      hover:bg-zinc-50/80
-                      transition-all
-                    "
-                  >
-
-                    {/* Status */}
-                    <td className="px-6 py-5">
-
+                  {/* Provider — with color dot */}
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-2">
                       <div
-                        className="
-                          inline-flex
-                          items-center
-                          gap-2
-                          px-3 py-1.5
-                          rounded-full
-                          text-sm
-                          font-medium
-                          border
-                        "
-                      >
-
-                        {
-                          log.status === "success"
-                            ? (
-                              <>
-                                <CheckCircle2
-                                  size={16}
-                                  className="text-green-600"
-                                />
-
-                                <span className="text-green-700">
-                                  Success
-                                </span>
-                              </>
-                            )
-                            : (
-                              <>
-                                <XCircle
-                                  size={16}
-                                  className="text-red-600"
-                                />
-
-                                <span className="text-red-700">
-                                  Failed
-                                </span>
-                              </>
-                            )
-                        }
-
-                      </div>
-
-                    </td>
-
-                    {/* Model */}
-                    <td className="px-6 py-5">
-
-                      <div>
-
-                        <p
-                          className="
-                            font-semibold
-                            text-zinc-900
-                          "
-                        >
-                          {log.model}
-                        </p>
-
-                        <p
-                          className="
-                            text-xs
-                            text-zinc-500
-                            mt-1
-                          "
-                        >
-                          {log.provider}
-                        </p>
-
-                      </div>
-
-                    </td>
-
-                    {/* Latency */}
-                    <td className="px-6 py-5">
-
-                      <span
-                        className="
-                          font-semibold
-                          text-zinc-800
-                        "
-                      >
-                        {log.latency.toFixed(2)}s
+                        className={`w-2 h-2 rounded-full ${log.provider === "groq"
+                          ? "bg-orange-500"
+                          : "bg-blue-500"
+                          }`}
+                      />
+                      <span className="font-medium text-zinc-700 capitalize">
+                        {log.provider}
                       </span>
+                    </div>
+                  </td>
 
-                    </td>
+                  {/* Model */}
+                  <td className="px-6 py-5">
+                    <p className="font-semibold text-zinc-900">{log.model}</p>
+                  </td>
 
-                    {/* Tokens */}
-                    <td className="px-6 py-5">
+                  {/* Latency */}
+                  <td className="px-6 py-5">
+                    <span className="font-semibold text-zinc-800">
+                      {log.latency.toFixed(2)}s
+                    </span>
+                  </td>
 
-                      <span
-                        className="
-                          inline-flex
-                          items-center
-                          px-3 py-1
-                          rounded-full
-                          bg-blue-50
-                          text-blue-700
-                          text-sm
-                          font-medium
-                        "
-                      >
-                        {log.total_tokens || 0}
-                      </span>
+                  {/* Tokens */}
+                  <td className="px-6 py-5">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-medium">
+                      {log.total_tokens || 0}
+                    </span>
+                  </td>
 
-                    </td>
+                  {/* Prompt */}
+                  <td className="px-6 py-5 max-w-[350px]">
+                    <p className="text-sm text-zinc-600 line-clamp-2 leading-6">
+                      {log.input_preview}
+                    </p>
+                  </td>
 
-                    {/* Prompt */}
-                    <td
-                      className="
-                        px-6 py-5
-                        max-w-[350px]
-                      "
-                    >
-
-                      <p
-                        className="
-                          text-sm
-                          text-zinc-600
-                          line-clamp-2
-                          leading-6
-                        "
-                      >
-                        {log.input_preview}
-                      </p>
-
-                    </td>
-
-                  </tr>
-
-                ))}
-
+                </tr>
+              ))}
             </tbody>
-
           </table>
-
         </div>
 
       </div>
-
     </div>
   );
 };
@@ -535,101 +301,20 @@ interface MetricCardProps {
   icon: React.ReactNode;
 }
 
-const MetricCard = ({
-  title,
-  value,
-  icon,
-}: MetricCardProps) => {
-
-  return (
-
-    <div
-      className="
-        relative
-        overflow-hidden
-
-        bg-white/80
-        backdrop-blur-xl
-
-        border
-        border-zinc-200
-
-        rounded-3xl
-        p-6
-
-        shadow-sm
-
-        hover:shadow-xl
-        hover:-translate-y-1
-
-        transition-all
-        duration-300
-      "
-    >
-
-      <div
-        className="
-          absolute
-          top-0
-          right-0
-          w-32 h-32
-          bg-blue-100/40
-          rounded-full
-          blur-3xl
-        "
-      />
-
-      <div
-        className="
-          relative
-          flex
-          items-center
-          justify-between
-          mb-6
-        "
-      >
-
-        <span
-          className="
-            text-zinc-500
-            font-medium
-          "
-        >
-          {title}
-        </span>
-
-        <div
-          className="
-            w-11 h-11
-            rounded-2xl
-            bg-blue-50
-            flex
-            items-center
-            justify-center
-            text-blue-600
-          "
-        >
-          {icon}
-        </div>
-
+const MetricCard = ({ title, value, icon }: MetricCardProps) => (
+  <div className="relative overflow-hidden bg-white/80 backdrop-blur-xl border border-zinc-200 rounded-3xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-100/40 rounded-full blur-3xl" />
+    <div className="relative flex items-center justify-between mb-6">
+      <span className="text-zinc-500 font-medium">{title}</span>
+      <div className="w-11 h-11 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
+        {icon}
       </div>
-
-      <h2
-        className="
-          relative
-          text-4xl
-          font-bold
-          tracking-tight
-          text-zinc-900
-        "
-      >
-        {value}
-      </h2>
-
     </div>
-  );
-};
-
+    <h2 className="relative text-4xl font-bold tracking-tight text-zinc-900">
+      {value}
+    </h2>
+  </div>
+)
 
 interface AnalyticsCardProps {
   title: string;
@@ -637,89 +322,23 @@ interface AnalyticsCardProps {
   children: React.ReactNode;
 }
 
-const AnalyticsCard = ({
-  title,
-  icon,
-  children,
-}: AnalyticsCardProps) => {
-
-  return (
-
-    <div
-      className="
-        bg-white/80
-        backdrop-blur-xl
-        border
-        border-zinc-200
-        rounded-3xl
-        p-6
-        shadow-sm
-      "
-    >
-
-      <div
-        className="
-          flex
-          items-center
-          gap-3
-          mb-6
-        "
-      >
-
-        <div
-          className="
-            w-11 h-11
-            rounded-2xl
-            bg-zinc-100
-            flex
-            items-center
-            justify-center
-          "
-        >
-          {icon}
-        </div>
-
-        <h2
-          className="
-            text-lg
-            font-bold
-            text-zinc-900
-          "
-        >
-          {title}
-        </h2>
-
+const AnalyticsCard = ({ title, icon, children }: AnalyticsCardProps) => (
+  <div className="bg-white/80 backdrop-blur-xl border border-zinc-200 rounded-3xl p-6 shadow-sm">
+    <div className="flex items-center gap-3 mb-6">
+      <div className="w-11 h-11 rounded-2xl bg-zinc-100 flex items-center justify-center">
+        {icon}
       </div>
-
-      {children}
-
+      <h2 className="text-lg font-bold text-zinc-900">{title}</h2>
     </div>
-  );
-};
+    {children}
+  </div>
+)
 
-const TableHead = ({
-  children,
-}: {
-  children: React.ReactNode;
-}) => {
-
-  return (
-
-    <th
-      className="
-        text-left
-        px-6 py-4
-        text-sm
-        font-semibold
-        text-zinc-500
-      "
-    >
-      {children}
-    </th>
-
-  );
-};
-
+const TableHead = ({ children }: { children: React.ReactNode }) => (
+  <th className="text-left px-6 py-4 text-sm font-semibold text-zinc-500">
+    {children}
+  </th>
+)
 
 interface InfoRowProps {
   label: string;
@@ -727,42 +346,12 @@ interface InfoRowProps {
   valueClass?: string;
 }
 
-const InfoRow = ({
-  label,
-  value,
-  valueClass = "text-zinc-900",
-}: InfoRowProps) => {
-
-  return (
-
-    <div
-      className="
-        flex
-        items-center
-        justify-between
-      "
-    >
-
-      <span className="text-zinc-500">
-        {label}
-      </span>
-
-      <span
-        className={`
-          font-semibold
-          ${valueClass}
-        `}
-      >
-        {value}
-      </span>
-
-    </div>
-  );
-};
-
-// ─────────────────────────────────────────────────────────────
-// Status Row
-// ─────────────────────────────────────────────────────────────
+const InfoRow = ({ label, value, valueClass = "text-zinc-900" }: InfoRowProps) => (
+  <div className="flex items-center justify-between">
+    <span className="text-zinc-500">{label}</span>
+    <span className={`font-semibold ${valueClass}`}>{value}</span>
+  </div>
+)
 
 interface StatusRowProps {
   color: string;
@@ -770,48 +359,14 @@ interface StatusRowProps {
   value: number;
 }
 
-const StatusRow = ({
-  color,
-  label,
-  value,
-}: StatusRowProps) => {
-
-  return (
-
-    <div
-      className="
-        flex
-        items-center
-        justify-between
-      "
-    >
-
-      <div className="flex items-center gap-2">
-
-        <div
-          className={`
-            w-2.5 h-2.5 rounded-full
-            ${color}
-          `}
-        />
-
-        <span className="text-zinc-600">
-          {label}
-        </span>
-
-      </div>
-
-      <span
-        className="
-          font-semibold
-          text-zinc-900
-        "
-      >
-        {value}
-      </span>
-
+const StatusRow = ({ color, label, value }: StatusRowProps) => (
+  <div className="flex items-center justify-between">
+    <div className="flex items-center gap-2">
+      <div className={`w-2.5 h-2.5 rounded-full ${color}`} />
+      <span className="text-zinc-600">{label}</span>
     </div>
-  );
-};
+    <span className="font-semibold text-zinc-900">{value}</span>
+  </div>
+)
 
 export default Dashboard;
