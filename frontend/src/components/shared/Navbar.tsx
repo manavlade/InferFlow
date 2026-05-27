@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, NotebookPen } from "lucide-react";
+import { Menu, X, NotebookPen, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -20,11 +20,41 @@ export default function Navbar() {
 
                 <div className="flex items-center justify-between h-16">
 
-                    <Link to="/" className="flex items-center gap-2">
-                        <NotebookPen className="h-7 w-7 text-blue-600" />
-                        <span className="text-xl font-bold text-gray-900">
-                            InferFlow
-                        </span>
+                    <Link
+                        to="/"
+                        className="flex items-center gap-3"
+                    >
+
+                        {/* Logo Wrapper */}
+                        <div className="relative w-11 h-11">
+
+                            {/* Glow */}
+                            <div className="absolute inset-0 rounded-2xl bg-blue-500/20 blur-xl" />
+
+                            {/* Main Icon */}
+                            <div className="relative w-full h-full rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/20" >
+                                <Sparkles
+                                    size={20}
+                                    className="text-white"
+                                />
+
+                            </div>
+
+                        </div>
+
+                        {/* Text */}
+                        <div>
+
+                            <h1 className="text-xl font-bold text-zinc-900 leading-none">
+                                InferFlow
+                            </h1>
+
+                            <p className="text-xs text-zinc-500 mt-1">
+                                AI Conversation Studio
+                            </p>
+
+                        </div>
+
                     </Link>
 
                     {/* DESKTOP MENU */}
@@ -59,14 +89,10 @@ export default function Navbar() {
             </div>
 
             {/* MOBILE SIDEBAR */}
-            <div
-                className={`
-                    fixed top-0 right-0 h-full w-[280px]
-                    bg-white shadow-2xl z-50
-                    transform transition-transform duration-300 ease-in-out
-                    md:hidden
-                    ${mobileMenuOpen ? "translate-x-0" : "translate-x-full"}
-                `}
+            <div className={`fixed top-0 right-0 h-full w-[280px] bg-white shadow-2xl z-50
+                transform transition-transform duration-300 ease-in-out md:hidden
+                ${mobileMenuOpen ? "translate-x-0" : "translate-x-full"}
+            `}
             >
 
                 {/* TOP */}
