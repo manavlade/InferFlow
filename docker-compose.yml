@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: inferflow_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - MONGO_URI=${MONGO_URI}
+    networks:
+      - inferflow_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_BACKEND_URL: "http://localhost:8000"
+    container_name: inferflow_frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - inferflow_network
+
+networks:
+  inferflow_network:
+    driver: bridge

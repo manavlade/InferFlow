@@ -11,14 +11,13 @@ if not os.getenv("GEMINI_API_KEY"):
     raise RuntimeError("GEMINI_API_KEY is not set. Check your .env file.")
 
 app = FastAPI()
-
 app.add_middleware(
-       CORSMiddleware,
+    CORSMiddleware,
 
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
-        "https://infer-flow-fmgj.vercel.app/"
+        "https://infer-flow-fmgj.vercel.app"
     ],
 
     allow_credentials=True,
