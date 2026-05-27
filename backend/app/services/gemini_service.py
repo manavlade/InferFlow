@@ -74,7 +74,6 @@ async def call_llm_with_logging(
 
         raise
 
-
 # ─── Streaming ────────────────────────────────────────────────
 async def stream_llm_with_logging(
     conversation_id: str,
@@ -82,6 +81,10 @@ async def stream_llm_with_logging(
 ):
     start_time = time.time()
     full_response = ""
+
+    prompt_tokens = None
+    completion_tokens = None
+    total_tokens = None
 
     try:
         formatted_prompt = _format_prompt(messages)
@@ -98,6 +101,40 @@ async def stream_llm_with_logging(
                 full_response += text
                 yield f"data: {text}\n\n"
 
+            usage = getattr(chunk, "usage_metadata", None)
+            if usage:
+                prompt_tokens = getattr(usage, "prompt_token_count", None)
+                completion_tokens = getattr(usage, "candidates_token_count", None)
+                total_tokens = getattr(usage, "total_token_count", None)
+
+        # ✅ Fallback — if still None, count tokens manually after stream
+        if total_tokens is None:
+            try:
+                full_prompt_and_response = formatted_prompt + full_response
+
+                token_info = await asyncio.to_thread(
+                    client.models.count_tokens,
+                    model="gemini-2.5-flash",
+                    contents=full_prompt_and_response
+                )
+
+                total_tokens = getattr(token_info, "total_tokens", None)
+
+                # estimate split — prompt is roughly formatted_prompt portion
+                prompt_token_info = await asyncio.to_thread(
+                    client.models.count_tokens,
+                    model="gemini-2.5-flash",
+                    contents=formatted_prompt
+                )
+
+                prompt_tokens = getattr(prompt_token_info, "total_tokens", None)
+
+                if total_tokens and prompt_tokens:
+                    completion_tokens = total_tokens - prompt_tokens
+
+            except Exception:
+                pass  # token counting failed, log as None — not critical
+
         latency = time.time() - start_time
 
         await send_log_to_ingestion({
@@ -108,9 +145,9 @@ async def stream_llm_with_logging(
             "status": "success",
             "input_preview": messages[-1]["content"][:100],
             "output_preview": full_response[:100],
-            "prompt_tokens": None,
-            "completion_tokens": None,
-            "total_tokens": None
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
+            "total_tokens": total_tokens
         })
 
         yield f"data: [DONE]{conversation_id}\n\n"
