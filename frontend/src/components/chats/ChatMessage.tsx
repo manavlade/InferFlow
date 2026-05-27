@@ -25,34 +25,11 @@ const ChatMessage = ({
     >
 
       <div
-        className={`
-          relative
-          overflow-hidden
-          max-w-[90%]
-          sm:max-w-[80%]
-          px-5 py-4
-          rounded-[28px]
-          shadow-lg
-          transition-all duration-300
-          hover:-translate-y-0.5
+        className={`  relative overflow-hidden  max-w-[90%] sm:max-w-[80%] px-5 py-4 rounded-[28px] shadow-lg transition-all duration-300 hover:-translate-y-0.5
 
           ${isUser
-            ? `
-                bg-gradient-to-br
-                from-blue-600
-                to-blue-500
-                text-white
-                rounded-br-md
-                shadow-blue-500/20
-              `
-            : `
-                bg-white/90
-                backdrop-blur-xl
-                text-zinc-800
-                border border-zinc-200
-                rounded-bl-md
-                shadow-zinc-200/70
-              `
+            ? `  bg-gradient-to-br from-blue-600 to-blue-500 text-white rounded-br-md shadow-blue-500/20`
+            : `  bg-white/90 backdrop-blur-xl text-zinc-800 border border-zinc-200 rounded-bl-md shadow-zinc-200/70`
           }
         `}
       >
@@ -60,13 +37,7 @@ const ChatMessage = ({
         {/* Soft Glow */}
         {!isUser && (
           <div
-            className="
-              absolute inset-0
-              bg-gradient-to-r
-              from-blue-100/40
-              to-transparent
-              pointer-events-none
-            "
+            className="absolute inset-0 bg-gradient-to-r from-blue-100/40 to-transparent pointer-events-none"
           />
         )}
 
@@ -74,12 +45,7 @@ const ChatMessage = ({
 
           {/* Label */}
           <div
-            className={`
-              text-xs
-              uppercase
-              tracking-wide
-              font-semibold
-              mb-3
+            className={` text-xs uppercase tracking-wide font-semibold mb-3
 
               ${isUser
                 ? "text-blue-100"
@@ -93,15 +59,7 @@ const ChatMessage = ({
           {/* User Message */}
           {isUser ? (
 
-            <p
-              className="
-                whitespace-pre-wrap
-                leading-7
-                text-[15px]
-              "
-            >
-              {content}
-            </p>
+            <p className="whitespace-pre-wrap leading-7 text-[15px]">{content}</p>
 
           ) : (
 

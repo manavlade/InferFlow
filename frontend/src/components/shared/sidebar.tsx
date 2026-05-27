@@ -29,6 +29,8 @@ const Sidebar = ({
   onConversationChange,
 }: SidebarProps) => {
 
+  const safeConversations = conversations || []
+
   const location = useLocation()
 
   const handleDelete = async (
@@ -72,63 +74,30 @@ const Sidebar = ({
   return (
 
     <aside
-      className="
-        w-72
-        hidden md:flex
-        flex-col
-        h-full
-        bg-white/80
-        backdrop-blur-xl
-        border-r
-        border-zinc-200
-        shadow-sm
+      className=" w-72 hidden md:flex flex-col h-full bg-white/80 backdrop-blur-xl border-r border-zinc-200 shadow-sm
       "
     >
 
-      {/* Top Section */}
       <div
-        className="
-          p-5
-          border-b
-          border-zinc-200
+        className=" p-5 border-b border-zinc-200
         "
       >
 
         {/* Logo */}
         <div
-          className="
-            flex items-center gap-3
-            mb-5
-          "
+          className=" flex items-center gap-3 mb-5"
         >
 
           <div
-            className="
-              relative
-              w-11 h-11
-            "
+            className=" relative w-11 h-11"
           >
 
             <div
-              className="
-                absolute inset-0
-                rounded-2xl
-                bg-blue-500/20
-                blur-xl
-              "
+              className=" absolute inset-0 rounded-2xl bg-blue-500/20 blur-xl"
             />
 
             <div
-              className="
-                relative
-                w-full h-full
-                rounded-2xl
-                bg-gradient-to-br
-                from-blue-600
-                to-cyan-500
-                flex items-center justify-center
-                shadow-lg shadow-blue-500/20
-              "
+              className=" relative w-full h-full rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/20"
             >
 
               <Sparkles
@@ -143,21 +112,12 @@ const Sidebar = ({
           <div>
 
             <h1
-              className="
-                text-lg
-                font-bold
-                text-zinc-900
-              "
-            >
+              className=" text-lg  font-bold text-zinc-900">
               InferFlow
             </h1>
 
             <p
-              className="
-                text-xs
-                text-zinc-500
-              "
-            >
+              className="text-xs text-zinc-500">
               AI Conversation Studio
             </p>
 
@@ -168,21 +128,7 @@ const Sidebar = ({
         {/* New Chat Button */}
         <button
           onClick={onNewChat}
-          className="
-            w-full
-            flex items-center justify-center gap-2
-            px-4 py-3
-            rounded-2xl
-            bg-gradient-to-r
-            from-blue-600
-            to-cyan-500
-            text-white
-            font-semibold
-            shadow-lg shadow-blue-500/20
-            hover:scale-[1.01]
-            transition-all
-            duration-200
-          "
+          className="  w-full  flex items-center justify-center gap-2 px-4 py-3 rounded-2xl  bg-gradient-to-r  from-blue-600  to-cyan-500 text-white font-semibold shadow-lg shadow-blue-500/20 hover:scale-[1.01] transition-all duration-200 cursor-pointer"
         >
 
           <Plus size={18} />
@@ -195,88 +141,46 @@ const Sidebar = ({
 
       {/* Conversations */}
       <div
-        className="
-          flex-1
-          overflow-y-auto
-          px-3 py-4
-        "
-      >
+        className=" flex-1 overflow-y-auto px-3 py-4">
 
         {/* Section Heading */}
         <div
-          className="
-            flex items-center gap-2
-            px-2 mb-4
-          "
-        >
+          className=" flex items-center gap-2 px-2 mb-4">
 
           <Clock3
             size={14}
-            className="text-zinc-400"
-          />
+            className="text-zinc-400"/>
 
           <p
-            className="
-              text-xs
-              font-semibold
-              tracking-wide
-              uppercase
-              text-zinc-400
-            "
-          >
+            className=" text-xs font-semibold tracking-wide uppercase text-zinc-400">
             Recent Conversations
           </p>
 
         </div>
 
         {/* Empty State */}
-        {conversations.length === 0 && (
+        {safeConversations.length === 0 && (
 
           <div
-            className="
-              mt-10
-              text-center
-              px-4
-            "
-          >
+            className=" mt-10 text-center px-4">
 
             <div
-              className="
-                w-14 h-14
-                mx-auto mb-4
-                rounded-2xl
-                bg-zinc-100
-                flex items-center justify-center
-              "
-            >
+              className=" w-14 h-14 mx-auto mb-4 rounded-2xl bg-zinc-100 flex items-center justify-center">
 
               <MessageSquare
                 size={24}
-                className="text-zinc-400"
-              />
+                className="text-zinc-400"/>
 
             </div>
 
             <h3
-              className="
-                text-sm
-                font-semibold
-                text-zinc-700
-                mb-1
-              "
-            >
+              className=" text-sm font-semibold text-zinc-700 mb-1">
               No conversations yet
             </h3>
 
             <p
-              className="
-                text-xs
-                text-zinc-500
-                leading-relaxed
-              "
-            >
-              Start a new AI conversation
-              to see your chats here.
+              className=" text-xs text-zinc-500 leading-relaxed">
+              Start a new AI conversation to see your chats here.
             </p>
 
           </div>
@@ -286,7 +190,7 @@ const Sidebar = ({
         {/* Conversations List */}
         <div className="space-y-2">
 
-          {conversations.map((convo) => {
+          {safeConversations.map((convo) => {
 
             const isActive =
               location.pathname === `/chat/${convo.id}`
@@ -301,32 +205,10 @@ const Sidebar = ({
                 onClick={() =>
                   onSelectConversation(convo.id)
                 }
-                className={`
-                  group
-                  relative
-                  rounded-2xl
-                  border
-                  cursor-pointer
-                  transition-all
-                  duration-200
-                  overflow-hidden
-                  ${
+                className={` group relative rounded-2xl border cursor-pointer transition-all duration-200 overflow-hidden ${
                     isActive
-                      ? `
-                        bg-gradient-to-r
-                        from-blue-600
-                        to-cyan-500
-                        border-transparent
-                        shadow-lg
-                        shadow-blue-500/20
-                        text-white
-                      `
-                      : `
-                        bg-white/70
-                        border-zinc-200
-                        hover:border-blue-200
-                        hover:bg-blue-50/50
-                      `
+                      ? `bg-gradient-to-r from-blue-600 to-cyan-500 border-transparent shadow-lg shadow-blue-500/20 text-white`
+                      : `bg-white/70 border-zinc-200 hover:border-blue-200 hover:bg-blue-50/50`
                   }
                 `}
               >
@@ -335,46 +217,22 @@ const Sidebar = ({
                 {isActive && (
 
                   <div
-                    className="
-                      absolute
-                      inset-0
-                      bg-white/5
-                    "
-                  />
+                    className="absolute inset-0 bg-white/5"/>
 
                 )}
 
                 <div
-                  className="
-                    relative
-                    flex items-start justify-between
-                    gap-3
-                    p-4
-                  "
-                >
+                  className=" relative flex items-start justify-between gap-3 p-4">
 
                   {/* Left */}
                   <div
-                    className="
-                      flex items-start gap-3
-                      flex-1
-                      min-w-0
-                    "
-                  >
+                    className=" flex items-start gap-3 flex-1 min-w-0">
 
                     <div
-                      className={`
-                        mt-0.5
-                        w-9 h-9
-                        rounded-xl
-                        flex items-center justify-center
-                        shrink-0
-                        ${
-                          isActive
+                      className={` mt-0.5 w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isActive
                             ? "bg-white/20 text-white"
                             : "bg-zinc-100 text-zinc-500"
-                        }
-                      `}
+                        }`}
                     >
 
                       <MessageSquare size={16} />
@@ -384,38 +242,16 @@ const Sidebar = ({
                     <div className="min-w-0">
 
                       <p
-                        className={`
-                          text-sm
-                          font-medium
-                          truncate
-                          ${
-                            isActive
-                              ? "text-white"
-                              : "text-zinc-800"
-                          }
-                        `}
-                      >
+                        className={`text-sm font-medium truncate ${isActive ? "text-white" : "text-zinc-800"}`}>
 
                         {convo.title}
 
                       </p>
 
-                      <div
-                        className="
-                          flex items-center gap-2
-                          mt-1
-                        "
-                      >
+                      <div className="flex items-center gap-2 mt-1">
 
                         <span
-                          className={`
-                            text-xs
-                            ${
-                              isActive
-                                ? "text-blue-100"
-                                : "text-zinc-400"
-                            }
-                          `}
+                          className={`text-xs ${isActive ? "text-blue-100" : "text-zinc-400"}`} 
                         >
                           {isCancelled
                             ? "Cancelled"
@@ -430,13 +266,7 @@ const Sidebar = ({
 
                   {/* Actions */}
                   <div
-                    className="
-                      opacity-0
-                      group-hover:opacity-100
-                      transition
-                      flex items-center gap-1
-                    "
-                  >
+                    className=" opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
 
                     {!isCancelled && (
 
@@ -444,21 +274,10 @@ const Sidebar = ({
                         onClick={(e) =>
                           handleCancel(e, convo.id)
                         }
-                        className={`
-                          p-2
-                          rounded-lg
-                          transition
-                          ${
+                        className={` p-2 rounded-lg transition ${
                             isActive
-                              ? `
-                                hover:bg-white/20
-                                text-white
-                              `
-                              : `
-                                hover:bg-amber-100
-                                text-zinc-500
-                                hover:text-amber-600
-                              `
+                              ? ` hover:bg-white/20 text-white`
+                              : `hover:bg-amber-100 text-zinc-500 hover:text-amber-600`
                           }
                         `}
                         title="Cancel conversation"
@@ -511,44 +330,19 @@ const Sidebar = ({
       </div>
 
       {/* Footer */}
-      <div
-        className="
-          p-4
-          border-t
-          border-zinc-200
-          bg-white/70
-        "
-      >
+      <div className="  p-4 border-t border-zinc-200 bg-white/70">
 
-        <div
-          className="
-            rounded-2xl
-            border border-zinc-200
-            bg-gradient-to-r
-            from-blue-50
-            to-cyan-50
-            p-4
-          "
-        >
+        <div className="rounded-2xl border border-zinc-200 bg-gradient-to-r from-blue-50 to-cyan-50 p-4">
 
-          <p
-            className="
-              text-sm
-              font-semibold
-              text-zinc-800
-              mb-1
-            "
-          >
+          <p className="text-sm font-semibold text-zinc-800 mb-1">
+
             AI Monitoring Enabled
+
           </p>
 
           <p
-            className="
-              text-xs
-              leading-relaxed
-              text-zinc-500
-            "
-          >
+            className="text-xs leading-relaxed text-zinc-500">
+
             All inference logs, latency,
             and token usage are tracked
             in real time.
